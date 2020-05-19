@@ -1,0 +1,60 @@
+#import packages
+%matplotlib inline
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.svm import SVC
+import pandas as pd
+
+#load data
+data = pd.read_csv(r'http://amlbook.com/data/zip/zip.train', header=None, sep='\n| ',engine='python')
+test = pd.read_csv(r'http://amlbook.com/data/zip/zip.test', header=None, sep='\n| ',engine='python')
+data = data[data.columns[1:]]
+test = test[test.columns[1:]]
+
+eta = 0.1
+d0 = data.shape[1]
+d1s = 2**np.array([1,2,3,4,5,6,7])
+errors = np.zeros((len(d1s),5001))
+errors_out = np.zeros((len(d1s),5001))
+
+
+for j in range(len(d1s)):
+    num_neurons = [d0, d1s[j], d0]
+    U = (6/(1+d0+d1s[j]))**(1/2)
+    W0 = np.random.uniform(-U,U, (num_neurons[0],num_neurons[1]))
+    W1 = np.random.uniform(-U,U, (num_neurons[1],num_neurons[2]))
+    b0 = np.random.uniform(-U,U, num_neurons[1])
+    b1 = np.random.uniform(-U,U, num_neurons[2])
+    
+    Z0 = np.dot(data, W0) + b0
+    X1 = np.tanh(Z0)
+    X2 = np.dot(X1, W1) + b1
+    errors[j][0] = (1/(len(data)*d0))*((X2 - data)**2).sum().sum()
+    
+    Z0_out = np.dot(test, W0) + b0
+    X1_out = np.tanh(Z0_out)
+    X2_out = np.dot(X1_out, W1) + b1
+    errors_out[j][0] = (1/(len(test)*d0))*((X2_out - test)**2).sum().sum()
+    
+    for i in range(5000):        
+        dZ1 = (2/(len(data)*d0))*(X2 - data)
+        db1 = dZ1.sum()
+        dW1 = np.dot(np.transpose(X1), dZ1)
+        dZ0 = np.dot(dZ1, np.transpose(W1)) * 1/(np.cosh(Z0)**2)
+        db0 = dZ0.sum()
+        dW0 = np.dot(np.transpose(data), dZ0)
+        
+        W0 = W0 - eta*dW0
+        W1 = W1 - eta*dW1
+        b0 = b0 - eta*db0
+        b1 = b1 - eta*db1
+        
+        Z0 = np.dot(data, W0) + np.array(b0)
+        X1 = np.tanh(Z0)
+        X2 = np.dot(X1, W1) + np.array(b1)
+        errors[j][i+1] = (1/(len(data)*d0))*((X2 - data)**2).sum().sum()
+        
+        Z0_out = np.dot(test, W0) + np.array(b0)
+        X1_out = np.tanh(Z0_out)
+        X2_out = np.dot(X1_out, W1) + np.array(b1)
+        errors_out[j][i+1] = (1/(len(test)*d0))*((X2_out - test)**2).sum().sum()
