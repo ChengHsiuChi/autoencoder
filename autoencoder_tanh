@@ -58,3 +58,15 @@ for j in range(len(d1s)):
         X1_out = np.tanh(Z0_out)
         X2_out = np.dot(X1_out, W1) + np.array(b1)
         errors_out[j][i+1] = (1/(len(test)*d0))*((X2_out - test)**2).sum().sum()
+
+for i in range(len(errors)):
+    plt.plot(errors[i],label=d1s[i])
+    plt.legend(loc='upper right')
+    plt.xlabel('T')
+    plt.ylabel('Ein')
+    
+for i in range(len(errors)):
+    plt.plot(errors_out[i],label=d1s[i])
+    plt.legend(loc='upper right')
+    plt.xlabel('T')
+    plt.ylabel('Eout')
